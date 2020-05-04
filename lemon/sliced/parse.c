@@ -446,7 +446,7 @@ static void parseonetoken(struct pstate *psp)
           for(z=psp->filename, nBack=0; *z; z++){
             if( *z=='\\' ) nBack++;
           }
-          lemon_sprintf(zLine, "#line %d ", psp->tokenlineno);
+          lemon_sprintf(zLine, "--#line %d ", psp->tokenlineno); // !!!
           nLine = lemonStrlen(zLine);
           n += nLine + lemonStrlen(psp->filename) + nBack;
         }

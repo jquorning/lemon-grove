@@ -510,7 +510,7 @@ PRIVATE FILE *tplt_open(struct lemon *lemp)
 }
 
 /* Print a #line directive line to the output file. */
-PRIVATE void tplt_linedir(FILE *out, int lineno, char *filename)
+PRIVATE void tplt_linedir_c(FILE *out, int lineno, char *filename)
 {
   fprintf(out,"#line %d \"",lineno);
   while( *filename ){
@@ -519,6 +519,18 @@ PRIVATE void tplt_linedir(FILE *out, int lineno, char *filename)
     filename++;
   }
   fprintf(out,"\"\n");
+}
+
+#include "emit_ada.h"
+
+/* Print a line directive/comment to the output file. */
+PRIVATE void tplt_linedir (FILE *out, int lineno, char *filename)
+{
+  switch (output_language)
+    {
+    case LANGUAGE_ADA: tplt_linedir_Ada (out, lineno, filename); break;
+    case LANGUAGE_C:   tplt_linedir_c   (out, lineno, filename); break;
+    }
 }
 
 /* Print a string to the file and keep the linenumber up to date */
@@ -661,7 +673,7 @@ PRIVATE char *append_str(const char *zText, int n, int p1, int p2){
 ** Return 1 if the expanded code requires that "yylhsminor" local variable
 ** to be defined.
 */
-PRIVATE int translate_code(struct lemon *lemp, struct rule *rp){
+PRIVATE int translate_code_c(struct lemon *lemp, struct rule *rp){
   char *cp, *xp;
   int i;
   int rc = 0;            /* True if yylhsminor is used */
@@ -858,7 +870,7 @@ PRIVATE int translate_code(struct lemon *lemp, struct rule *rp){
 ** Generate code which executes when the rule "rp" is reduced.  Write
 ** the code to "out".  Make sure lineno stays up-to-date.
 */
-PRIVATE void emit_code(
+PRIVATE void emit_code_c(
   FILE *out,
   struct rule *rp,
   struct lemon *lemp,
@@ -901,13 +913,31 @@ PRIVATE void emit_code(
 }
 
 /*
+** Generate code which executes when the rule "rp" is reduced.  Write
+** the code to "out".  Make sure lineno stays up-to-date.
+*/
+PRIVATE void emit_code(
+  FILE *out,
+  struct rule *rp,
+  struct lemon *lemp,
+  int *lineno
+)
+{
+  switch (output_language)
+    {
+    case LANGUAGE_ADA: emit_code_Ada (out,rp,lemp,lineno); break;
+    case LANGUAGE_C:   emit_code_c   (out,rp,lemp,lineno); break;
+    }
+}
+
+/*
 ** Print the definition of the union used for the parser's data stack.
 ** This union contains fields for every possible data type for tokens
 ** and nonterminals.  In the process of computing and printing this
 ** union, also set the ".dtnum" field of every terminal and nonterminal
 ** symbol.
 */
-void print_stack_union(
+void print_stack_union_c(
   FILE *out,                  /* The output stream */
   struct lemon *lemp,         /* The main info structure for this parser */
   int *plineno,               /* Pointer to the line number */
@@ -1246,7 +1276,7 @@ void ReportTable_c(
     fprintf(out,"#define YYWILDCARD %d\n",
        lemp->wildcard->index); lineno++;
   }
-  print_stack_union(out,lemp,&lineno,mhflag);
+  print_stack_union_c(out,lemp,&lineno,mhflag);
   fprintf(out, "#ifndef YYSTACKDEPTH\n"); lineno++;
   if( lemp->stacksize ){
     fprintf(out,"#define YYSTACKDEPTH %s\n",lemp->stacksize);  lineno++;
@@ -1669,7 +1699,7 @@ void ReportTable_c(
   /* Generate code which execution during each REDUCE action */
   i = 0;
   for(rp=lemp->rule; rp; rp=rp->next){
-    i += translate_code(lemp, rp);
+    i += translate_code_c(lemp, rp);
   }
   if( i ){
     fprintf(out,"        YYMINORTYPE yylhsminor;\n"); lineno++;
@@ -1741,9 +1771,6 @@ void ReportTable_c(
   return;
 }
 
-#include "emit_ada.h"
-#include "emit_ada.c"
-
 void ReportTable (struct lemon *lemp,
                   int mhflag,     /* Output in makeheaders format if true */
                   int sqlFlag)    /* Generate the *.sql file too */
@@ -1800,6 +1827,8 @@ void ReportHeader(struct lemon *lemp)
     case LANGUAGE_C:   ReportHeader_c   (lemp); break;
     }
 }
+
+#include "emit_ada.c"
 
 /* Reduce the size of the action tables, if possible, by making use
 ** of defaults.
