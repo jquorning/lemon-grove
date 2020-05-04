@@ -481,9 +481,9 @@ void ReportTable_Ada (
   */
   for(i=0, rp=lemp->rule; rp; rp=rp->next, i++){
     assert( rp->iRule==i );
-    fprintf(out," /* %3d */ \"", i);
+    fprintf (out, "      \"");
     writeRuleText(out, rp);
-    fprintf(out,"\",\n"); lineno++;
+    fprintf (out, "\"%s  --  %3d\n", rp->next ? "," : " ", i); lineno++;
   }
   tplt_xfer(lemp->name,in,out,&lineno);
 
