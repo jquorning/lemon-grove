@@ -10,7 +10,6 @@ void ReportTable_Ada (
   int sqlFlag     /* Generate the *.sql file too */
 ){
   FILE *out, *in, *sql;
-  char line[LINESIZE];
   int  lineno;
   struct state *stp;
   struct action *ap;
@@ -463,9 +462,16 @@ void ReportTable_Ada (
 
   /* Generate a table containing the symbolic name of every symbol
   */
+  int symbol_len_max = 0;
   for(i=0; i<lemp->nsymbol; i++){
-    lemon_sprintf(line,"\"%s\",",lemp->symbols[i]->name);
-    fprintf(out,"  /* %4d */ \"%s\",\n",i, lemp->symbols[i]->name); lineno++;
+    if(strlen(lemp->symbols[i]->name) > symbol_len_max){
+      symbol_len_max = strlen(lemp->symbols[i]->name);
+    }
+  }
+  for(i=0; i<lemp->nsymbol; i++){
+    fprintf (out, "      \"%-*s\"", symbol_len_max, lemp->symbols[i]->name);
+    fprintf (out, i == lemp->nsymbol - 1 ? ";" : ",");
+    fprintf (out, "  --  %4d\n", i); lineno++;
   }
   tplt_xfer(lemp->name,in,out,&lineno);
 
