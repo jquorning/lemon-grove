@@ -1103,7 +1103,7 @@ static void writeRuleText(FILE *out, struct rule *rp){
 
 
 /* Generate C source code for the parser */
-void ReportTable(
+void ReportTable_c(
   struct lemon *lemp,
   int mhflag,     /* Output in makeheaders format if true */
   int sqlFlag     /* Generate the *.sql file too */
@@ -1741,8 +1741,22 @@ void ReportTable(
   return;
 }
 
+#include "emit_ada.h"
+#include "emit_ada.c"
+
+void ReportTable (struct lemon *lemp,
+                  int mhflag,     /* Output in makeheaders format if true */
+                  int sqlFlag)    /* Generate the *.sql file too */
+{
+  switch (output_language)
+    {
+    case LANGUAGE_ADA: ReportTable_Ada (lemp, mhflag, sqlFlag); break;
+    case LANGUAGE_C:   ReportTable_c   (lemp, mhflag, sqlFlag); break;
+    }
+}
+
 /* Generate a header file for the parser */
-void ReportHeader(struct lemon *lemp)
+void ReportHeader_c(struct lemon *lemp)
 {
   FILE *out, *in;
   const char *prefix;
@@ -1775,6 +1789,16 @@ void ReportHeader(struct lemon *lemp)
     fclose(out);
   }
   return;
+}
+
+/* Generate a header file for the parser */
+void ReportHeader(struct lemon *lemp)
+{
+  switch (output_language)
+    {
+    case LANGUAGE_ADA: ReportHeader_Ada (lemp); break;
+    case LANGUAGE_C:   ReportHeader_c   (lemp); break;
+    }
 }
 
 /* Reduce the size of the action tables, if possible, by making use
