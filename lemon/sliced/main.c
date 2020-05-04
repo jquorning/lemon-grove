@@ -136,7 +136,7 @@ static struct rule *Rule_sort(struct rule *rp){
 }
 
 /* forward reference */
-static const char *minimum_size_type(int lwr, int upr, int *pnByte);
+static const char *minimum_size_type_c(int lwr, int upr, int *pnByte);
 
 /* Print a single line of the "Parser Stats" output
 */

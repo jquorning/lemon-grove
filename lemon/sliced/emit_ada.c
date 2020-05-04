@@ -2,6 +2,12 @@
 ** Emit Ada packages.
 */
 
+/*
+** Return the name of a C datatype able to represent values between
+** lwr and upr, inclusive.  If pnByte!=NULL then also write the sizeof
+** for that type (1, 2, or 4) into *pnByte.
+*/
+static const char *minimum_size_type_Ada(int lwr, int upr, int *pnByte);
 
 /* Generate parser body */
 void ReportTable_Ada (
@@ -140,10 +146,10 @@ void ReportTable_Ada (
 
   /* Generate the defines */
   fprintf(out,"YYCODETYPE   : constant := %s;\n",
-    minimum_size_type(0, lemp->nsymbol, &szCodeType)); lineno++;
+    minimum_size_type_Ada(0, lemp->nsymbol, &szCodeType)); lineno++;
   fprintf(out,"YYNOCODE     : constant := %d;\n",lemp->nsymbol);  lineno++;
   fprintf(out,"YYACTIONTYPE : constant := %s;\n",
-    minimum_size_type(0,lemp->maxAction,&szActionType)); lineno++;
+    minimum_size_type_Ada(0,lemp->maxAction,&szActionType)); lineno++;
   if( lemp->wildcard ){
     fprintf(out,"YYWILDCARD : constant := %d;\n",
        lemp->wildcard->index); lineno++;
@@ -375,7 +381,7 @@ void ReportTable_Ada (
   fprintf(out, "YY_SHIFT_MIN   : constant := (%d);\n", mnTknOfst); lineno++;
   fprintf(out, "YY_SHIFT_MAX   : constant := (%d);\n", mxTknOfst); lineno++;
   fprintf(out, "yy_shift_ofst : constant array (Natrual range <>) of %s := (\n",
-       minimum_size_type(mnTknOfst, lemp->nterminal+lemp->nactiontab, &sz));
+       minimum_size_type_Ada(mnTknOfst, lemp->nterminal+lemp->nactiontab, &sz));
        lineno++;
   lemp->tablesize += n*sz;
   for(i=j=0; i<n; i++){
@@ -401,7 +407,7 @@ void ReportTable_Ada (
   fprintf(out, "YY_REDUCE_MIN   : constant := (%d);\n", mnNtOfst); lineno++;
   fprintf(out, "YY_REDUCE_MAX   : constant := (%d);\n", mxNtOfst); lineno++;
   fprintf(out, "yy_reduce_ofst : constant array (Natural range <>) of %s := (\n",
-          minimum_size_type(mnNtOfst-1, mxNtOfst, &sz)); lineno++;
+          minimum_size_type_Ada(mnNtOfst-1, mxNtOfst, &sz)); lineno++;
   lemp->tablesize += n*sz;
   for(i=j=0; i<n; i++){
     int ofst;
@@ -1058,4 +1064,34 @@ PRIVATE int translate_code_Ada(struct lemon *lemp, struct rule *rp){
   }
 
   return rc;
+}
+
+/*
+** Return the name of a C datatype able to represent values between
+** lwr and upr, inclusive.  If pnByte!=NULL then also write the sizeof
+** for that type (1, 2, or 4) into *pnByte.
+*/
+static const char *minimum_size_type_Ada(int lwr, int upr, int *pnByte){
+  const char *zType = "Integer";
+  int nByte = 4;
+  if( lwr>=0 ){
+    if( upr<=255 ){
+      zType = "unsigned_char";
+      nByte = 1;
+    }else if( upr<65535 ){
+      zType = "unsigned_short_int";
+      nByte = 2;
+    }else{
+      zType = "unsigned_int";
+      nByte = 4;
+    }
+  }else if( lwr>=-127 && upr<=127 ){
+    zType = "signed_char";
+    nByte = 1;
+  }else if( lwr>=-32767 && upr<32767 ){
+    zType = "short";
+    nByte = 2;
+  }
+  if( pnByte ) *pnByte = nByte;
+  return zType;
 }

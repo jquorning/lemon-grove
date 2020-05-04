@@ -1058,7 +1058,7 @@ void print_stack_union_c(
 ** lwr and upr, inclusive.  If pnByte!=NULL then also write the sizeof
 ** for that type (1, 2, or 4) into *pnByte.
 */
-static const char *minimum_size_type(int lwr, int upr, int *pnByte){
+static const char *minimum_size_type_c(int lwr, int upr, int *pnByte){
   const char *zType = "int";
   int nByte = 4;
   if( lwr>=0 ){
@@ -1268,10 +1268,10 @@ void ReportTable_c(
 
   /* Generate the defines */
   fprintf(out,"#define YYCODETYPE %s\n",
-    minimum_size_type(0, lemp->nsymbol, &szCodeType)); lineno++;
+    minimum_size_type_c(0, lemp->nsymbol, &szCodeType)); lineno++;
   fprintf(out,"#define YYNOCODE %d\n",lemp->nsymbol);  lineno++;
   fprintf(out,"#define YYACTIONTYPE %s\n",
-    minimum_size_type(0,lemp->maxAction,&szActionType)); lineno++;
+    minimum_size_type_c(0,lemp->maxAction,&szActionType)); lineno++;
   if( lemp->wildcard ){
     fprintf(out,"#define YYWILDCARD %d\n",
        lemp->wildcard->index); lineno++;
@@ -1503,7 +1503,7 @@ void ReportTable_c(
   fprintf(out, "#define YY_SHIFT_MIN      (%d)\n", mnTknOfst); lineno++;
   fprintf(out, "#define YY_SHIFT_MAX      (%d)\n", mxTknOfst); lineno++;
   fprintf(out, "static const %s yy_shift_ofst[] = {\n",
-       minimum_size_type(mnTknOfst, lemp->nterminal+lemp->nactiontab, &sz));
+       minimum_size_type_c(mnTknOfst, lemp->nterminal+lemp->nactiontab, &sz));
        lineno++;
   lemp->tablesize += n*sz;
   for(i=j=0; i<n; i++){
@@ -1529,7 +1529,7 @@ void ReportTable_c(
   fprintf(out, "#define YY_REDUCE_MIN   (%d)\n", mnNtOfst); lineno++;
   fprintf(out, "#define YY_REDUCE_MAX   (%d)\n", mxNtOfst); lineno++;
   fprintf(out, "static const %s yy_reduce_ofst[] = {\n",
-          minimum_size_type(mnNtOfst-1, mxNtOfst, &sz)); lineno++;
+          minimum_size_type_c(mnNtOfst-1, mxNtOfst, &sz)); lineno++;
   lemp->tablesize += n*sz;
   for(i=j=0; i<n; i++){
     int ofst;
