@@ -1,0 +1,37 @@
+--
+--  The author disclaims copyright to this source code.  In place of
+--  a legal notice, here is a blessing:
+--
+--    May you do good and not evil.
+--    May you find forgiveness for yourself and forgive others.
+--    May you share freely, not taking more than you give.
+--
+
+project Lemon is
+
+  for Languages    use ("C");
+  for Source_Dirs  use ("../sliced/");
+
+  for Source_Files use ("lemon.c");
+  --  lemon.c is top level source file.
+  --  Other h/c files are included directly.
+
+  for Excluded_Source_Files use ("lempar.c");
+  --  lempar.c is explicitly excluded as it is not source of lemon.
+  --  lempar.c is used in generated projects.
+
+  for Object_Dir   use "../obj/";
+  for Exec_Dir     use "../bin/";
+  for Main         use ("lemon.c");
+
+  for Create_Missing_Dirs use "True";
+  
+  package Compiler is
+     for Default_Switches ("C") use ("-O2", "-Wall");
+  end Compiler;
+
+  package Builder is
+     for Executable ("lemon.c") use "lemon";
+  end Builder;
+
+end Lemon;
