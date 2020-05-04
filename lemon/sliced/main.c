@@ -56,6 +56,37 @@ static void handle_T_option(char *z){
   lemon_strcpy(user_templatename, z);
 }
 
+/* Output language options:
+** -Lada - Ada
+** -Lc   - C
+*/
+enum e_language {
+  //  LANGUAGE_INVALID = 0,
+  LANGUAGE_ADA     = 1,
+  LANGUAGE_C       = 2
+};
+static enum e_language output_language = LANGUAGE_C;
+static Boolean         language_once   = LEMON_FALSE;
+static void handle_L_option (char *z)
+{
+  Boolean ok = 0;
+  if (language_once == LEMON_TRUE)
+    {
+      fprintf (stderr, "more than one language option\n");
+      exit (1);
+    }
+  //  output_language = LANGUAGE_INVALID;
+  if (strcmp (z, "ada") == 0) { ok = 1; output_language = LANGUAGE_ADA; }
+  if (strcmp (z, "c")   == 0) { ok = 1; output_language = LANGUAGE_C;   }
+  // if (output_language == LANGUAGE_INVALID)
+  if (!ok)
+    {
+      fprintf (stderr, "invalid language option\n");
+      exit (1);
+    }
+  language_once = LEMON_TRUE;
+}
+
 /* Merge together to lists of rules ordered by rule.iRule */
 static struct rule *Rule_merge(struct rule *pA, struct rule *pB){
   struct rule *pFirst = 0;
@@ -140,6 +171,7 @@ int main(int argc, char **argv)
     {OPT_FSTR, "I", 0, "Ignored.  (Placeholder for '-I' compiler options.)"},
     {OPT_FLAG, "m", (char*)&mhflag, "Output a makeheaders compatible file."},
     {OPT_FLAG, "l", (char*)&nolinenosflag, "Do not print #line statements."},
+    {OPT_FSTR, "L", (char*)&handle_L_option, "Output language. (ada,c).  Default 'c'."},
     {OPT_FSTR, "O", 0, "Ignored.  (Placeholder for '-O' compiler options.)"},
     {OPT_FLAG, "p", (char*)&showPrecedenceConflict,
                     "Show conflicts resolved by precedence rules"},
