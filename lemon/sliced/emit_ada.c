@@ -15,6 +15,7 @@ void ReportTable_Ada (
   int mhflag,     /* Output in makeheaders format if true */
   int sqlFlag     /* Generate the *.sql file too */
 ){
+  const char *package_name = "Calc_Ada";
   FILE *out, *in, *sql;
   int  lineno;
   struct state *stp;
@@ -128,7 +129,7 @@ void ReportTable_Ada (
   }
   tplt_xfer(lemp->name,in,out,&lineno);
 
-  fprintf(out,"package body Calc_Ada is\n"); lineno++;
+  fprintf(out,"package body %s is\n", package_name); lineno++;
 
   /* Generate #defines for all tokens */
   if( mhflag ){
@@ -173,14 +174,14 @@ void ReportTable_Ada (
     fprintf(out,"   %sARG_SDECL : constant := %s;\n",name,lemp->arg);  lineno++;
     fprintf(out,"#define %sARG_PDECL ,%s\n",name,lemp->arg);  lineno++;
     fprintf(out,"#define %sARG_PARAM ,%s\n",name,&lemp->arg[i]);  lineno++;
-    fprintf(out,"#define %sARG_FETCH %s=yypParser->%s;\n",
+    fprintf(out,"procedure %sARG_FETCH is begin %s := YypParser.%s; end;\n",
                  name,lemp->arg,&lemp->arg[i]);  lineno++;
-    fprintf(out,"#define %sARG_STORE yypParser->%s=%s;\n",
+    fprintf(out,"procedure %sARG_STORE is begin YypParser.%s := %s; end;\n",
                  name,&lemp->arg[i],&lemp->arg[i]);  lineno++;
   }else{
-    fprintf(out,"procedure %sARG_SDECL is null;\n",name); lineno++;
-    fprintf(out,"procedure %sARG_PDECL is null;\n",name); lineno++;
-    fprintf(out,"procedure %sARG_PARAM is null;\n",name); lineno++;
+    fprintf(out,"type %sARG_SDECL is null record;\n",name); lineno++;
+    fprintf(out,"type %sARG_PDECL is null record;\n",name); lineno++;
+    fprintf(out,"type %sARG_PARAM is null record;\n",name); lineno++;
     fprintf(out,"procedure %sARG_FETCH is null;\n",name); lineno++;
     fprintf(out,"procedure %sARG_STORE is null;\n",name); lineno++;
   }
@@ -191,14 +192,14 @@ void ReportTable_Ada (
     fprintf(out,"#define %sCTX_SDECL %s;\n",name,lemp->ctx);  lineno++;
     fprintf(out,"#define %sCTX_PDECL ,%s\n",name,lemp->ctx);  lineno++;
     fprintf(out,"#define %sCTX_PARAM ,%s\n",name,&lemp->ctx[i]);  lineno++;
-    fprintf(out,"#define %sCTX_FETCH %s=yypParser->%s;\n",
+    fprintf(out,"procedure %sCTX_FETCH is begin %s := YypParser.%s; end;\n",
                  name,lemp->ctx,&lemp->ctx[i]);  lineno++;
-    fprintf(out,"#define %sCTX_STORE yypParser->%s=%s;\n",
+    fprintf(out,"procedure %sCTX_STORE is begin YypParser.%s := %s; end;\n",
                  name,&lemp->ctx[i],&lemp->ctx[i]);  lineno++;
   }else{
-    fprintf(out,"procedure %sCTX_SDECL is null;\n",name); lineno++;
-    fprintf(out,"procedure %sCTX_PDECL is null;\n",name); lineno++;
-    fprintf(out,"procedure %sCTX_PARAM is null;\n",name); lineno++;
+    fprintf(out,"type %sCTX_SDECL is null record;\n",name); lineno++;
+    fprintf(out,"type %sCTX_PDECL is null record;\n",name); lineno++;
+    fprintf(out,"type %sCTX_PARAM is null record;\n",name); lineno++;
     fprintf(out,"procedure %sCTX_FETCH is null;\n",name); lineno++;
     fprintf(out,"procedure %sCTX_STORE is null;\n",name); lineno++;
   }
@@ -330,7 +331,7 @@ void ReportTable_Ada (
     int action = acttab_yyaction(pActtab, i);
     if( action<0 ) action = lemp->noAction;
     if( j==0 ) fprintf(out,"   --  %5d\n   ", i);
-    fprintf(out, " %4d,", action);
+    fprintf(out, " %4d%s", action, i == n-1 ? "" : ",");
     if( j==9 || i==n-1 ){
       fprintf(out, "\n"); lineno++;
       j = 0;
@@ -362,7 +363,7 @@ void ReportTable_Ada (
   nLookAhead = lemp->nterminal + lemp->nactiontab;
   while( i<nLookAhead ){
     if( j==0 ) fprintf(out,"   --  %5d\n   ", i);
-    fprintf(out, " %4d,", lemp->nterminal);
+    fprintf(out, " %4d%s", lemp->nterminal, i == nLookAhead-1 ? "" : ",");
     if( j==9 ){
       fprintf(out, "\n"); lineno++;
       j = 0;
@@ -390,7 +391,7 @@ void ReportTable_Ada (
     ofst = stp->iTknOfst;
     if( ofst==NO_OFFSET ) ofst = lemp->nactiontab;
     if( j==0 ) fprintf(out,"   --  %5d\n   ", i);
-    fprintf(out, " %4d,", ofst);
+    fprintf(out, " %4d%s", ofst, i == n-1 ? "" : ",");
     if( j==9 || i==n-1 ){
       fprintf(out, "\n"); lineno++;
       j = 0;
@@ -415,7 +416,7 @@ void ReportTable_Ada (
     ofst = stp->iNtOfst;
     if( ofst==NO_OFFSET ) ofst = mnNtOfst - 1;
     if( j==0 ) fprintf(out,"   --  %5d\n   ", i);
-    fprintf(out, " %4d,", ofst);
+    fprintf(out, " %4d%s", ofst, i == n-1 ? "" : ",");
     if( j==9 || i==n-1 ){
       fprintf(out, "\n"); lineno++;
       j = 0;
@@ -426,17 +427,18 @@ void ReportTable_Ada (
   fprintf(out, "   );\n"); lineno++;
 
   /* Output the default action table */
-  fprintf(out, "   yy_default : constant array (Natural range <>) of YYACTIONTYPE := (\n"); lineno++;
+  fprintf(out, "yy_default : constant array (Natural range <>) of YYACTIONTYPE := (\n"); lineno++;
   n = lemp->nxstate;
   lemp->tablesize += n*szActionType;
   for(i=j=0; i<n; i++){
     stp = lemp->sorted[i];
-    if( j==0 ) fprintf(out,"      --  %5d\n      ", i);
+    if( j==0 ) fprintf(out,"   --  %5d\n   ", i);
     if( stp->iDfltReduce<0 ){
-      fprintf(out, " %4d,", lemp->errAction);
+      fprintf(out, " %4d", lemp->errAction);
     }else{
-      fprintf(out, " %4d,", stp->iDfltReduce + lemp->minReduce);
+      fprintf(out, " %4d", stp->iDfltReduce + lemp->minReduce);
     }
+    fprintf(out, i == n-1 ? "" : ",");
     if( j==9 || i==n-1 ){
       fprintf(out, "\n"); lineno++;
       j = 0;
@@ -444,7 +446,7 @@ void ReportTable_Ada (
       j++;
     }
   }
-  fprintf(out, "   );\n"); lineno++;
+  fprintf(out, ");\n"); lineno++;
   tplt_xfer(lemp->name,in,out,&lineno);
 
   /* Generate the table of fallback tokens.
@@ -460,11 +462,14 @@ void ReportTable_Ada (
       if( p->fallback==0 ){
         fprintf(out, "    0,  -- %10s => nothing\n", p->name);
       }else{
-        fprintf(out, "  %3d,  -- %10s => %s\n", p->fallback->index,
+        fprintf(out, "   %3d,  -- %10s => %s\n", p->fallback->index,
           p->name, p->fallback->name);
       }
       lineno++;
     }
+  }
+  else {
+    fprintf(out, "   1 .. 0 => <>\n"); lineno++;  /* Empty array ??? */
   }
   tplt_xfer(lemp->name, in, out, &lineno);
 
@@ -478,7 +483,7 @@ void ReportTable_Ada (
   }
   for(i=0; i<lemp->nsymbol; i++){
     fprintf (out, "      \"%-*s\"", symbol_len_max, lemp->symbols[i]->name);
-    fprintf (out, i == lemp->nsymbol - 1 ? ";" : ",");
+    fprintf (out, i == lemp->nsymbol - 1 ? " " : ",");
     fprintf (out, "  --  %4d\n", i); lineno++;
   }
   tplt_xfer(lemp->name,in,out,&lineno);
@@ -569,13 +574,19 @@ void ReportTable_Ada (
   ** sequentually beginning with 0.
   */
   for(i=0, rp=lemp->rule; rp; rp=rp->next, i++){
-    fprintf(out,"  %4d,  --  (%d) ", rp->lhs->index, i);
+    fprintf(out,"%4d%s  --  (%d) ",
+            rp->lhs->index,
+            rp->next ? "," : " ", /* Comma separation */
+            i);
      rule_print(out, rp);
      fprintf(out,"\n"); lineno++; /* End comment */
   }
   tplt_xfer(lemp->name,in,out,&lineno);
   for(i=0, rp=lemp->rule; rp; rp=rp->next, i++){
-    fprintf(out,"  %3d,  --  (%d) ", -rp->nrhs, i);
+    fprintf(out,"%3d%s  --  (%d) ",
+            -rp->nrhs,
+            rp->next ? "," : " ", /* Comma separation */
+            i);
     rule_print(out, rp);
     fprintf(out,"\n"); lineno++; /* End comment */
   }
@@ -587,7 +598,7 @@ void ReportTable_Ada (
     i += translate_code_Ada(lemp, rp);
   }
   if( i ){
-    fprintf(out,"        YYMINORTYPE yylhsminor;\n"); lineno++;
+    fprintf(out,"--!!!        YYMINORTYPE yylhsminor;\n"); lineno++;
   }
   /* First output rules other than the default: rule */
   for(rp=lemp->rule; rp; rp=rp->next){
@@ -616,7 +627,7 @@ void ReportTable_Ada (
   }
   /* Finally, output the default: rule.  We choose as the default: all
   ** empty actions. */
-  fprintf(out,"      when others =>\n"); lineno++;
+  fprintf(out,"      when others => null;\n"); lineno++;
   for(rp=lemp->rule; rp; rp=rp->next){
     if( rp->codeEmitted ) continue;
     assert( rp->noCode );
@@ -650,7 +661,7 @@ void ReportTable_Ada (
   /* Append any addition code the user desires */
   tplt_print(out,lemp,lemp->extracode,&lineno);
 
-  fprintf(out,"end Calc_Ada;\n"); lineno++;
+  fprintf(out,"end %s;\n", package_name); lineno++;
 
   acttab_free(pActtab);
   fclose(in);
@@ -663,7 +674,7 @@ void ReportTable_Ada (
 void ReportHeader_Ada(struct lemon *lemp)
 {
   FILE *out;
-  const char *package_name = "Calc";
+  const char *package_name = "Calc_Ada";
   const char *prefix;
   int i;
 
@@ -1051,7 +1062,7 @@ PRIVATE int translate_code_Ada(struct lemon *lemp, struct rule *rp){
   /* If unable to write LHS values directly into the stack, write the
   ** saved LHS value now. */
   if( lhsdirect==0 ){
-    append_str("  YYmsp (%d).Minor.YY%d = ", 0, 1-rp->nrhs, rp->lhs->dtnum);
+    append_str("  YYmsp (%d).Minor.YY%d := ", 0, 1-rp->nrhs, rp->lhs->dtnum);
     append_str(zLhs, 0, 0, 0);
     append_str(";\n", 0, 0, 0);
   }

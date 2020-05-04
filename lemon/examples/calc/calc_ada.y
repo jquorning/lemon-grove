@@ -43,7 +43,7 @@ expr(A) ::= expr(B) DIVIDE expr(C). {
 }
 
 expr(A) ::= INTEGER(B). {
-    A = B;
+ A := B;
 }
 
 /* Local Variables: */

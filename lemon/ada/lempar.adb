@@ -219,8 +219,8 @@ type yyParser is record
 --#ifndef YYNOERRORRECOVERY
   Yyerrcnt : Integer;             --  Shifts left before out of the error
 --#endif
-  ParseARG_SDECL                  --  A place to hold %extra_argument
-  ParseCTX_SDECL                  --  A place to hold %extra_context
+  ARG : ParseARG_SDECL;           --  A place to hold %extra_argument
+  CTX : ParseCTX_SDECL;           --  A place to hold %extra_context
 --#if YYSTACKDEPTH<=0
   Yystksz    : Integer;           --  Current side of the stack
 --  yyStackEntry *yystack;        --  The parser's stack
@@ -298,16 +298,16 @@ procedure YyGrowStack
    Error_Count :    out Natural)
 is
    New_Size : Integer;
-   Idx     : Integer;
-   Pnew    : YyStackEntry_Ptr;
+   Idx      : Integer;
+   Pnew     : YyStackEntry_Ptr;
 begin
    New_Size := P.Yystksz * 2 + 100;
-   Idx     := (if P.yytos then (int)(P.Yytos - P.Yystack) else 0);
+   Idx     := (if P.yytos then P.Yytos - P.Yystack else 0);
    if P.Yystack = P.Yystk0'Access then
-      pNew := new Stack_Array'(0 .. New_Size - 1);
+      pNew := new Stack_Array'(0 .. New_Size - 1 => <>);
       PNew (0) := P.yystk0;
    else
-      pNew := new Stack_Array'(0 .. New_Size - 1);
+      pNew := new Stack_Array'(0 .. New_Size - 1 => <>);
       Pnew (Pnew'First .. P.Yystack'Last) := P.Yystack;
       --pNew := Realloc (P.yystack, New_Size * sizeof(pNew[0]));
    end if;
@@ -338,11 +338,13 @@ end YyGrowStack;
 --  Initialize a new parser that has already been allocated.
 --
 procedure ParseInit
-  (void *yypRawParser ParseCTX_PDECL)
+  (YypRawParser : System.Address;
+   CTX          : ParseCTX_PDECL)
 is
-  yyParser *yypParser = (yyParser*)yypRawParser;
+   YypParser : YyParser;
+   for Yypparser'Address use YypRawParser'Address;
 begin
-  ParseCTX_STORE
+  ParseCTX_STORE;
 --#ifdef YYTRACKMAXSTACKDEPTH
   YypParser.yyhwm := 0;
 --#endif
@@ -399,13 +401,13 @@ end ParseInit;
 --  directives of the input grammar.
 --
 procedure Yy_Destructor
-  (YypParser : in out yyParser,     -- The parser
-   Yymajor   : in     YYCODETYPE,   -- Type code for object to destroy
+  (YypParser : in out YyParser;     -- The parser
+   Yymajor   : in     YYCODETYPE;   -- Type code for object to destroy
    Yypminor  : in out YYMINORTYPE)  -- The object to be destroyed
 is
 begin
-  ParseARG_FETCH
-  ParseCTX_FETCH
+  ParseARG_FETCH;
+  ParseCTX_FETCH;
   case yymajor is
     --  Here is inserted the actions which take place when a
     --  terminal or non-terminal is destroyed.  This can happen
@@ -625,8 +627,8 @@ end Yy_Destructor;
 procedure YyStackOverflow (YypParser : in out yyParser)
 is
 begin
-   ParseARG_FETCH
-   ParseCTX_FETCH
+   ParseARG_FETCH;
+   ParseCTX_FETCH;
 --#ifndef NDEBUG
    if yyTraceFILE then
      fprintf(yyTraceFILE,"%sStack Overflow!\n",yyTracePrompt);
@@ -640,8 +642,8 @@ begin
 --------- Begin %stack_overflow code -------------------------------------------
 %%
 --------- End %stack_overflow code ---------------------------------------------
-   ParseARG_STORE --  Suppress warning about unused %extra_argument var
-   ParseCTX_STORE
+   ParseARG_STORE; --  Suppress warning about unused %extra_argument var
+   ParseCTX_STORE;
 end YyStackOverflow;
 
 --
@@ -732,6 +734,9 @@ procedure Yy_Accept (Parser : in out yyParser);  --  Forward Declaration
 --  means that the extra parameters have no performance impact.
 --
 procedure Yy_Reduce is
+   Yylhsminor : YYMINORTYPE;
+   --!!! Kopieret hertil fra emit_ada.c!
+   --!!! Kan ikke deklarere i case statement.
 begin
 --  static YYACTIONTYPE yy_reduce(
 --    yyParser *yypParser,         /* The parser */
@@ -837,8 +842,8 @@ procedure Yy_Parse_Failed
   (YypParser : in out YyParser)            --  The parser
 is
 begin
-  ParseARG_FETCH
-  ParseCTX_FETCH
+  ParseARG_FETCH;
+  ParseCTX_FETCH;
 --  #ifndef NDEBUG
 --    if( yyTraceFILE ){
 --      fprintf(yyTraceFILE,"%sFail!\n",yyTracePrompt);
@@ -850,8 +855,8 @@ begin
 ------------- Begin %parse_failure code ----------------------------------------
 %%
 ------------- End %parse_failure code ------------------------------------------
-  ParseARG_STORE -- Suppress warning about unused %extra_argument variable
-  ParseCTX_STORE
+  ParseARG_STORE; -- Suppress warning about unused %extra_argument variable
+  ParseCTX_STORE;
 end Yy_Parse_Failed;
 --#endif /* YYNOERRORRECOVERY */
 
@@ -859,19 +864,19 @@ end Yy_Parse_Failed;
 --  The following code executes when a syntax error first occurs.
 --
 procedure Yy_Syntax_Error
-    (YypParser : in out yyParser,         -- The parser
-     Yymajor   : in     Integer,          -- The major type of the error token
+    (YypParser : in out YyParser;         -- The parser
+     Yymajor   : in     Integer;          -- The major type of the error token
      Yyminor   : in     ParseTOKENTYPE)   -- The minor type of the error token
 is
 begin
-  ParseARG_FETCH
-  ParseCTX_FETCH
+  ParseARG_FETCH;
+  ParseCTX_FETCH;
 --#define TOKEN yyminor
 ------------- Begin %syntax_error code -----------------------------------------
 %%
 ------------- End %syntax_error code -------------------------------------------
-  ParseARG_STORE --  Suppress warning about unused %extra_argument variable
-  ParseCTX_STORE
+  ParseARG_STORE; --  Suppress warning about unused %extra_argument variable
+  ParseCTX_STORE;
 end Yy_Syntax_Error;
 
 --
@@ -881,8 +886,8 @@ procedure Yy_Accept
   (YypParser : in out YyParser)            -- The parser
 is
 begin
-  ParseARG_FETCH
-  ParseCTX_FETCH
+  ParseARG_FETCH;
+  ParseCTX_FETCH;
 --#ifndef NDEBUG
   if yyTraceFILE then
     Fprintf (yyTraceFILE,"%sAccept!\n",yyTracePrompt);
@@ -897,8 +902,8 @@ begin
 ------------ Begin %parse_accept code ------------------------------------------
 %%
 ------------ End %parse_accept code --------------------------------------------
-  ParseARG_STORE --  Suppress warning about unused %extra_argument variable
-  ParseCTX_STORE
+  ParseARG_STORE; --  Suppress warning about unused %extra_argument variable
+  ParseCTX_STORE;
 end Yy_Accept;
 
 --  The main parser program.
