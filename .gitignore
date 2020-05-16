@@ -114,6 +114,10 @@ Desktop.ini
 *.msm
 *.msp
 
+# Ada GPRbuild
+object/
+binary/
+
 # End of https://www.gitignore.io/api/windows,linux,macos,purebasic
 
 # EOF #
