@@ -146,10 +146,10 @@ void ReportTable_Ada (
   tplt_xfer(lemp->name,in,out,&lineno);
 
   /* Generate the defines */
-  fprintf(out,"YYCODETYPE   : constant := %s;\n",
+  fprintf(out,"type YYCODETYPE is %s;\n",
     minimum_size_type_Ada(0, lemp->nsymbol, &szCodeType)); lineno++;
   fprintf(out,"YYNOCODE     : constant := %d;\n",lemp->nsymbol);  lineno++;
-  fprintf(out,"YYACTIONTYPE : constant := %s;\n",
+  fprintf(out,"type YYACTIONTYPE is %s;\n",
     minimum_size_type_Ada(0,lemp->maxAction,&szActionType)); lineno++;
   if( lemp->wildcard ){
     fprintf(out,"YYWILDCARD : constant := %d;\n",
@@ -381,9 +381,10 @@ void ReportTable_Ada (
   fprintf(out, "YY_SHIFT_COUNT : constant := (%d);\n", n-1); lineno++;
   fprintf(out, "YY_SHIFT_MIN   : constant := (%d);\n", mnTknOfst); lineno++;
   fprintf(out, "YY_SHIFT_MAX   : constant := (%d);\n", mxTknOfst); lineno++;
-  fprintf(out, "yy_shift_ofst : constant array (Natrual range <>) of %s := (\n",
-       minimum_size_type_Ada(mnTknOfst, lemp->nterminal+lemp->nactiontab, &sz));
-       lineno++;
+  fprintf(out, "type Shift_Offset_Type is %s;\n",
+          minimum_size_type_Ada(mnTknOfst, lemp->nterminal+lemp->nactiontab, &sz)); lineno++;
+  fprintf(out, "yy_shift_ofst : constant array (Natural range <>)"
+          " of Shift_Offset_Type := (\n"); lineno++;
   lemp->tablesize += n*sz;
   for(i=j=0; i<n; i++){
     int ofst;
@@ -407,8 +408,10 @@ void ReportTable_Ada (
   fprintf(out, "YY_REDUCE_COUNT : constant := (%d);\n", n-1); lineno++;
   fprintf(out, "YY_REDUCE_MIN   : constant := (%d);\n", mnNtOfst); lineno++;
   fprintf(out, "YY_REDUCE_MAX   : constant := (%d);\n", mxNtOfst); lineno++;
-  fprintf(out, "yy_reduce_ofst : constant array (Natural range <>) of %s := (\n",
+  fprintf(out, "type Reduce_Offset_Type is %s;\n",
           minimum_size_type_Ada(mnNtOfst-1, mxNtOfst, &sz)); lineno++;
+  fprintf(out, "yy_reduce_ofst : constant array (Natural range <>)"
+          " of Reduce_Offset_Type := (\n"); lineno++;
   lemp->tablesize += n*sz;
   for(i=j=0; i<n; i++){
     int ofst;
@@ -1082,27 +1085,32 @@ PRIVATE int translate_code_Ada(struct lemon *lemp, struct rule *rp){
 ** lwr and upr, inclusive.  If pnByte!=NULL then also write the sizeof
 ** for that type (1, 2, or 4) into *pnByte.
 */
-static const char *minimum_size_type_Ada(int lwr, int upr, int *pnByte){
-  const char *zType = "Integer";
-  int nByte = 4;
-  if( lwr>=0 ){
-    if( upr<=255 ){
-      zType = "unsigned_char";
-      nByte = 1;
-    }else if( upr<65535 ){
-      zType = "unsigned_short_int";
-      nByte = 2;
-    }else{
-      zType = "unsigned_int";
-      nByte = 4;
-    }
-  }else if( lwr>=-127 && upr<=127 ){
-    zType = "signed_char";
-    nByte = 1;
-  }else if( lwr>=-32767 && upr<32767 ){
-    zType = "short";
-    nByte = 2;
-  }
-  if( pnByte ) *pnByte = nByte;
+static const char *minimum_size_type_Ada(int lwr, int upr, int *pnByte)
+{
+  static char zType [200]; 
+
+  sprintf (zType, "range %d .. %d", lwr, upr);
+/*   const char *zType = "Integer"; */
+/*   int nByte = 4; */
+/*   if( lwr>=0 ){ */
+/*     if( upr<=255 ){ */
+/*       zType = "unsigned_char"; */
+/*       nByte = 1; */
+/*     }else if( upr<65535 ){ */
+/*       zType = "unsigned_short_int"; */
+/*       nByte = 2; */
+/*     }else{ */
+/*       zType = "unsigned_int"; */
+/*       nByte = 4; */
+/*     } */
+/*   }else if( lwr>=-127 && upr<=127 ){ */
+/*     zType = "signed_char"; */
+/*     nByte = 1; */
+/*   }else if( lwr>=-32767 && upr<32767 ){ */
+/*     zType = "short"; */
+/*     nByte = 2; */
+/*   } */
+/*   if( pnByte ) *pnByte = nByte; */
+  if( pnByte ) *pnByte = 4;
   return zType;
 }

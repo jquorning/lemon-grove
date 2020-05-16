@@ -1,0 +1,7 @@
+lempar.*
+calc_ada.ads
+calc_ada.adb
+calc_ada
+*.stdout
+*.stderr
+*.out

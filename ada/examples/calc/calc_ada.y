@@ -42,7 +42,8 @@ expr(A) ::= expr(B) DIVIDE expr(C). {
 	end if;
 }
 
-expr(A) ::= INTEGER(B). {
+/* Misspelling og integer because of Ada clash */
+expr(A) ::= INTEGR(B). {
  A := B;
 }
 

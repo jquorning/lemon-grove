@@ -1,0 +1,5 @@
+project Calc_Ada is
+
+  for Main use ("main.adb");
+
+end Calc_Ada;

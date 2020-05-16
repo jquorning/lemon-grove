@@ -317,10 +317,10 @@ begin
 --#ifndef NDEBUG
       if YyTraceFILE then
          Fprintf (yyTraceFILE,"%sStack grows from %d to %d entries.\n",
-                  yyTracePrompt, P.Yystksz, NewSize);
+                  yyTracePrompt, P.Yystksz, New_Size);
       end if;
 --#endif
-      P.Yystksz := NewSize;
+      P.Yystksz := New_Size;
    end if;
    Error_Count := (if PNew = 0 then 1 else 0);
 end YyGrowStack;
@@ -721,7 +721,7 @@ YyRuleInfoNRhs : constant array (Natural range <>) of Signed_Char := (
 %%
 );
 
-procedure Yy_Accept (Parser : in out yyParser);  --  Forward Declaration
+procedure Yy_Accept (YypParser : in out yyParser);  --  Forward Declaration
 
 --
 --  Perform a reduce action and the shift that must immediately
@@ -896,7 +896,7 @@ begin
 --#ifndef YYNOERRORRECOVERY
   YypParser.yyerrcnt := -1;
 --#endif
-  assert( YypParser.Yytos = YypParser.yystack );
+  pragma Assert (YypParser.Yytos = YypParser.yystack);
   --  Here code is inserted which will be executed whenever the
   --  parser accepts
 ------------ Begin %parse_accept code ------------------------------------------
