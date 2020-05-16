@@ -10,7 +10,7 @@
 project Lemon is
 
   for Languages    use ("C");
-  for Source_Dirs  use ("../sliced/");
+  for Source_Dirs  use ("../lemon/sliced/");
 
   for Source_Files use ("lemon.c");
   --  lemon.c is top level source file.
@@ -20,8 +20,8 @@ project Lemon is
   --  lempar.c is explicitly excluded as it is not source of lemon.
   --  lempar.c is used in generated projects.
 
-  for Object_Dir   use "../obj/";
-  for Exec_Dir     use "../bin/";
+  for Object_Dir   use "../object/";
+  for Exec_Dir     use "../binary/";
   for Main         use ("lemon.c");
 
   for Create_Missing_Dirs use "True";
