@@ -274,7 +274,8 @@ end ParseTrace;
 --#if defined(YYCOVERAGE) || !defined(NDEBUG)
 --  For tracing shifts, the names of all terminals and nonterminals
 --  are required.  The following table supplies these names
-yyTokenName : constant array (Natural range <>) of String := (
+type String_Access is access all String;
+yyTokenName : constant array (Natural range <>) of String_Access := (
 %%
 );
 --#endif /* defined(YYCOVERAGE) || !defined(NDEBUG) */
@@ -282,7 +283,7 @@ yyTokenName : constant array (Natural range <>) of String := (
 --#ifndef NDEBUG
 --  For tracing reduce actions, the names of all rules are required.
 --
-yyRuleName : constant array (Natural range <>) of String := (
+yyRuleName : constant array (Natural range <>) of String_Access := (
 %%
 );
 --#endif /* NDEBUG */

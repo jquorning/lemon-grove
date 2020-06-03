@@ -485,11 +485,13 @@ void ReportTable_Ada (
     }
   }
   for(i=0; i<lemp->nsymbol; i++){
-    fprintf (out, "      \"%-*s\"", symbol_len_max, lemp->symbols[i]->name);
+    fprintf (out, "      new String'(\"%-*s\")", symbol_len_max, lemp->symbols[i]->name);
     fprintf (out, i == lemp->nsymbol - 1 ? " " : ",");
     fprintf (out, "  --  %4d\n", i); lineno++;
   }
+  fprintf (out, "--emit_ada.c:492\n"); lineno++; // JQ !!!
   tplt_xfer(lemp->name,in,out,&lineno);
+  fprintf (out, "--emit_ada.c:494\n"); lineno++; // JQ !!!
 
   /* Generate a table containing a text string that describes every
   ** rule in the rule set of the grammar.  This information is used
@@ -497,11 +499,13 @@ void ReportTable_Ada (
   */
   for(i=0, rp=lemp->rule; rp; rp=rp->next, i++){
     assert( rp->iRule==i );
-    fprintf (out, "      \"");
+    fprintf (out, "      new String'(\"");
     writeRuleText(out, rp);
-    fprintf (out, "\"%s  --  %3d\n", rp->next ? "," : " ", i); lineno++;
+    fprintf (out, "\")%s  --  %3d\n", rp->next ? "," : " ", i); lineno++;
   }
+  fprintf (out, "--emit_ada.c:507\n"); lineno++; // JQ !!!
   tplt_xfer(lemp->name,in,out,&lineno);
+  fprintf (out, "--emit_ada.c:508\n"); lineno++; // JQ !!!
 
   /* Generate code which executes every time a symbol is popped from
   ** the stack while processing errors or while destroying the parser.
@@ -859,7 +863,7 @@ void print_stack_union_Ada(
   name = lemp->name ? lemp->name : "Parse";
   lineno = *plineno;
   if( mhflag ){ fprintf(out,"#if INTERFACE\n"); lineno++; }
-  fprintf(out,"subtype %sTOKENTYPE is %s;\n",name,
+  fprintf(out,"subtype %sTOKENTYPE is Interfaces.C.%s;\n",name,
     lemp->tokentype?lemp->tokentype:"void*");  lineno++;
   if( mhflag ){ fprintf(out,"#endif\n"); lineno++; }
   fprintf(out,"type YYMINORTYPE is record\n"); lineno++;
